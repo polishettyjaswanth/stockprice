@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stock Prediction Tool</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --primary-color: #2ecc71;    /* Vibrant green */
+      --secondary-color: #27ae60;  /* Darker green */
+      --background-color: #1c2833; /* Dark background */
+      --card-background: #2c3e50;  /* Slate dark background */
+      --text-color: #ecf0f1;       /* Light text */
+      --error-color: #e74c3c;      /* Bright red for errors */
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .prediction-card {
+      background-color: var(--card-background);
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(46, 204, 113, 0.1);
+      padding: 2rem;
+      border: 2px solid var(--primary-color);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .card-header h1 {
+      font-size: 2rem;
+      color: var(--primary-color);
+      margin-left: 1rem;
+    }
+
+    .card-header i {
+      color: var(--primary-color);
+      font-size: 2.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+      color: var(--primary-color);
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: var(--background-color);
+      color: var(--text-color);
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .form-input:focus {
+      outline: none;
+      box-shadow: 0 0 10px var(--primary-color);
+      border-color: var(--secondary-color);
+    }
+
+    .stock-selection {
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 1rem;
+      background-color: var(--background-color);
+    }
+
+    .stock-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .stock-radio-wrapper {
+      position: relative;
+    }
+
+    .stock-radio {
+      display: none;
+    }
+
+    .stock-label {
+      display: block;
+      padding: 0.75rem;
+      text-align: center;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background-color: var(--background-color);
+    }
+
+    .stock-radio:checked + .stock-label {
+      background-color: var(--primary-color);
+      color: var(--background-color);
+      font-weight: bold;
+    }
+
+    .predict-button {
+      width: 100%;
+      padding: 0.75rem;
+      background-color: var(--primary-color);
+      color: var(--background-color);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .predict-button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .results {
+      margin-top: 1.5rem;
+      background-color: var(--background-color);
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+
+    .error-message {
+      color: var(--error-color);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .success-message {
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .scrollbar::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .scrollbar::-webkit-scrollbar-track {
+      background: rgba(46, 204, 113, 0.1);
+      border-radius: 10px;
+    }
+
+    .scrollbar::-webkit-scrollbar-thumb {
+      background: var(--primary-color);
+      border-radius: 10px;
+    }
+
+    @media (max-width: 600px) {
+      .stock-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="prediction-card">
+      <div class="card-header">
+        <i class="fas fa-chart-line"></i>
+        <h1>Stock Prediction Tool</h1>
+      </div>
+      
+      <form id="predictionForm">
+        <div class="form-group">
+          <label for="start_date">Starting Date</label>
+          <input type="date" id="start_date" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="end_date">Ending Date</label>
+          <input type="date" id="end_date" class="form-input" required>
+        </div>
+        
+        <div class="form-group">
+          <label for="investment">Investment Amount</label>
+          <input type="number" id="investment" class="form-input" placeholder="Enter investment amount" min="1" required>
+        </div>
+        
+        <div class="form-group">
+          <label>Select Stock</label>
+          <div class="stock-selection scrollbar">
+            <div class="stock-grid" id="stockGrid">
+              <!-- Stocks will be dynamically populated here -->
+            </div>
+          </div>
+        </div>
+        
+        <button type="submit" class="predict-button">
+          <i class="fas fa-magic"></i> Predict Stocks
+        </button>
+      </form>
+      
+      <div class="results" id="results"></div>
+  </div>
+  </div>
+
+  <script>
+    // Comprehensive stock list
+    const stocks = [
+      {symbol: 'AAPL', name: 'Apple'},
+      {symbol: 'MSFT', name: 'Microsoft'},
+      {symbol: 'GOOGL', name: 'GOOGLE'},
+      {symbol: 'AMZN', name: 'Amazon'},
+      {symbol: 'TSLA', name: 'Tesla'},
+      {symbol: 'META', name: 'Meta'},
+      {symbol: 'NVDA', name: 'NVIDIA'},
+      {symbol: 'INTC', name: 'Intel'},
+      {symbol: 'AMD', name: 'AMD'},
+      {symbol: 'PYPL', name: 'PayPal'}
+    ];
+
+    const stockGridContainer = document.getElementById('stockGrid');
+    const resultsDiv = document.getElementById('results');
+
+    stocks.forEach(stock => {
+      const wrapper = document.createElement('div');
+      wrapper.className = 'stock-radio-wrapper';
+
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.id = stock.symbol;
+      radio.value = stock.symbol;
+      radio.name = 'stock';
+      radio.className = 'stock-radio';
+
+      const label = document.createElement('label');
+      label.htmlFor = stock.symbol;
+      label.textContent = stock.name;
+      label.className = 'stock-label';
+
+      wrapper.appendChild(radio);
+      wrapper.appendChild(label);
+      stockGridContainer.appendChild(wrapper);
+    });
+
+    // Prediction form submission
+    document.getElementById('predictionForm').addEventListener('submit', async function (e) {
+      e.preventDefault();
+      
+      // Clear previous results
+      resultsDiv.innerHTML = '';
+
+      try {
+        const start_date = document.getElementById('start_date').value;
+        const end_date = document.getElementById('end_date').value;
+        const investment_amount = document.getElementById('investment').value;
+        const selectedStock = document.querySelector('input[name="stock"]:checked');
+
+        // Validation
+        if (!start_date || !end_date) {
+          throw new Error('Please select both start and end dates.');
+        }
+
+        if (new Date(start_date) >= new Date(end_date)) {
+          throw new Error('End date must be after start date.');
+        }
+
+        if (investment_amount <= 0) {
+          throw new Error('Investment amount must be greater than zero.');
+        }
+
+        if (!selectedStock) {
+          throw new Error('Please select a stock.');
+        }
+
+        const stocks = [selectedStock.value];
+
+        // Simulate a network request (replace with actual fetch)
+        const response = await fetch('/predict', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ start_date, end_date, investment_amount, stocks })
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const results = await response.json();
+
+        // Display results with proper error handling
+        results.forEach(result => {
+          const resultElement = document.createElement('div');
+          
+          if (result.error) {
+            // Error scenario
+            resultElement.innerHTML = `
+              <div class="error-message">
+                <i class="fas fa-exclamation-triangle"></i>
+                ${result.stock}: ${result.error}
+              </div>
+            `;
+            resultElement.classList.add('error-message');
+          } else {
+            // Success scenario
+            resultElement.innerHTML = `
+              <div class="success-message">
+                <i class="fas fa-chart-line"></i>
+                ${result.stock}: Projected Value - $${result.projected_value.toLocaleString()}
+              </div>
+            `;
+            resultElement.classList.add('success-message');
+          }
+          
+          resultsDiv.appendChild(resultElement);
+        });
+      } catch (error) {
+        // Handle any unexpected errors
+        resultsDiv.innerHTML = `
+          <div class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            ${error.message}
+          </div>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>
